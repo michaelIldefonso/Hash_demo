@@ -9,8 +9,40 @@ db.init_app(app)
 
 @app.route('/')
 def index():
-    users = User.query.all()
-    return render_template('index.html', users=users)
+    return redirect(url_for('login'))  # Redirect to the login page
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('userName')
+        password = request.form.get('password')
+        
+        # Add your authentication logic here
+        
+        return redirect(url_for('index'))  # Redirect to the index page after successful login
+    
+    return render_template('login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        userName = request.form.get('userName')
+        fullName = request.form.get('fullName')
+        email = request.form.get('email')
+        contact = request.form.get('contact')
+        password = request.form.get('password')
+
+        if not userName or not fullName:
+            return "UserName and FullName cannot be empty!", 400
+
+        new_user = User(userName=userName, fullName=fullName, email=email,
+                        contact=contact, password=password)
+
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('index'))
+
+    return render_template('signup.html')
 
 @app.route('/add', methods=['POST'])
 def add_user():
@@ -30,15 +62,7 @@ def add_user():
     db.session.commit()
     return redirect(url_for('index'))
 
-@app.route('/login')
-def login():
-    return render_template('login.html')
-
-@app.route('/signup')
-def signup():
-    return render_template('signup.html')
-
-# delete if not needed
+# Delete if not needed
 @app.route('/delete/<int:user_id>', methods=['POST'])
 def delete_user(user_id):
     try:
@@ -52,7 +76,6 @@ def delete_user(user_id):
     except Exception as e:
         print(f"Error deleting user: {e}")
         return "An error occurred while trying to delete the user.", 500
-
 
 if __name__ == '__main__':
     with app.app_context():
