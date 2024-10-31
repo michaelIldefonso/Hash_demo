@@ -1,3 +1,4 @@
+# app/__init__.py
 from flask import Flask
 
 def create_app():
@@ -11,3 +12,6 @@ def create_app():
     app.register_blueprint(main)
 
     return app
+
+# Create the app instance
+app = create_app()
