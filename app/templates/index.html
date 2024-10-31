@@ -4,25 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User List</title>
+    <!--Delete if not needed-->
+    <script>
+        function confirmDelete(username, form) {
+            if (confirm(`Are you sure you want to delete the user "${username}"?`)) {
+                form.submit();
+            }
+        }
+    </script>
 </head>
 <body>
     <h1>Registered Users</h1>
     <table>
-        <tr>
-            <th>Username</th>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>Contact</th>
-        </tr>
-        {% for user in users %}
-        <tr>
-            <td>{{ user.userName }}</td>
-            <td>{{ user.fullName }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.contact }}</td>
-        </tr>
-        {% endfor %}
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Contact</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.userName }}</td>
+                <td>{{ user.fullName }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.contact }}</td>
+                <td>
+                    <!--Delete if not needed-->
+                    <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+                        <button type="button" onclick="confirmDelete('{{ user.userName }}', this.form)">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
-    <a href="{{ url_for('signup') }}">Sign Up</a>
+    <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a></p>
+    <p>Already have an account? <a href="{{ url_for('login') }}">Log In</a></p>
+    
 </body>
 </html>

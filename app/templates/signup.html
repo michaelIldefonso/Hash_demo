@@ -4,10 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
+    <script>
+        function validateForm() {
+            const password = document.querySelector('input[name="password"]').value;
+            const confirmPassword = document.querySelector('input[name="confirmPassword"]').value;
+
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
+                return false; // Prevent form submission
+            }
+            return true; // Allow form submission
+        }
+    </script>
 </head>
 <body>
     <h1>Sign Up</h1>
-    <form action="{{ url_for('add_user') }}" method="POST">
+    <form action="{{ url_for('add_user') }}" method="POST" onsubmit="return validateForm();">
         <label for="userName">Username:</label>
         <input type="text" name="userName" required><br>
 
@@ -23,7 +35,13 @@
         <label for="password">Password:</label>
         <input type="password" name="password" required><br>
 
+        <label for="confirmPassword">Confirm Password:</label>
+        <input type="password" name="confirmPassword" required><br>
+
         <button type="submit">Sign Up</button>
     </form>
+
+    <!-- Link to Login Page -->
+    <p>Already have an account? <a href="{{ url_for('login') }}">Log In</a></p>
 </body>
 </html>

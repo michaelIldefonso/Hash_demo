@@ -30,9 +30,29 @@ def add_user():
     db.session.commit()
     return redirect(url_for('index'))
 
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
 @app.route('/signup')
 def signup():
     return render_template('signup.html')
+
+# delete if not needed
+@app.route('/delete/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    try:
+        user = User.query.get(user_id)  # Find the user by ID
+        if user:
+            db.session.delete(user)  # Remove the user from the session
+            db.session.commit()  # Commit the changes to the database
+            return redirect(url_for('index'))  # Redirect to the index page
+        else:
+            return "User not found!", 404  # Handle the case where the user doesn't exist
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        return "An error occurred while trying to delete the user.", 500
+
 
 if __name__ == '__main__':
     with app.app_context():
