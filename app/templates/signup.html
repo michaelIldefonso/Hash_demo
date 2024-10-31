@@ -3,24 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>User Registration</title>
 </head>
 <body>
-    <h1>Sign UP</h1>
-    <form method="POST">
-        <label for="email">Email</label>
-        <input type="text" name="email" placeholder="Enter Email" required><br>
-        <label for="userName">Username</label>
-        <input type="text" name="userName" placeholder="Enter Username" required><br>
-        <label for="fullName">Full Name</label>
-        <input type="text" name="fullName" placeholder="Enter Full Name" required><br>
-        <label for="contact">Contact</label>
-        <input type="number" name="contact" placeholder="Enter Contact" required><br>
-        <label for="password">Password</label>
-        <input type="text" name="password" placeholder="Enter Password" required><br>
-        <label for="pass2">Confirm Password</label>
-        <input type="text" name="pass2" placeholder="Enter Confirm Password" required><br>
-        <input type="submit" name="confirmBtn" placeholder="Confirm">
+    <h1>User Registration</h1>
+    <form action="/add" method="POST">
+        <label for="userName">Username:</label>
+        <input type="text" id="userName" name="username" required>
+        <br>
+        <label for="fullName">Full Name:</label>
+        <input type="text" id="fullName" name="full_name" required>
+        <br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <br>
+        <label for="contact">Contact:</label>
+        <input type="text" id="contact" name="contact" required>
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <br>
+        <input type="submit" value="Register">
     </form>
+
+    <h2>Registered Users:</h2>
+    <ul>
+        {% for user in users %}
+            <li>{{ user.username }} - {{ user.full_name }} - {{ user.email }} - {{ user.contact }}</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
