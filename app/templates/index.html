@@ -32,7 +32,8 @@
                 <td>{{ user.fullName }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.contact }}</td>
-                <td>
+                <td>{{ user.password }}</td>
+                
                     <!--Delete if not needed-->
                     <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
                         <button type="button" onclick="confirmDelete('{{ user.userName }}', this.form)">Delete</button>
