@@ -19,37 +19,44 @@
         <div class="header-section">
             <h1>Registered Users</h1>
         </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Full Name</th>
-                        <th>Email</th>
-                        <th>Contact</th>
-                        <th>Password</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td>{{ user.userName }}</td>
-                        <td>{{ user.fullName }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.contact }}</td>
-                        <td>{{ user.password }}</td>
-                        <td>
-                            <!--Delete if not needed-->
-                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
-                                <button type="button" class="btn" onclick="confirmDelete('{{ user.userName }}', this.form)">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <p class="loginp">Don't have an account? <a class="login" href="{{ url_for('signup') }}">Sign Up</a></p>
-            <p class="loginp">Already have an account? <a class="login" href="{{ url_for('login') }}">Log In</a></p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                    <th>Password</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.userName }}</td>
+                    <td>{{ user.fullName }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.contact }}</td>
+                    <td>{{ user.password }}</td>
+                    <td>
+                        <!--Delete if not needed-->
+                        <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+                            <button type="button" class="btn" onclick="confirmDelete('{{ user.userName }}', this.form)">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div class="button-container" style="margin-top: 20px;">
+            <form action="{{ url_for('logout') }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn">Logout</button>
+            </form>
+        </div>
+
+        <p class="loginp">Don't have an account? <a class="login" href="{{ url_for('signup') }}">Sign Up</a></p>
+        <p class="loginp">Already have an account? <a class="login" href="{{ url_for('login') }}">Log In</a></p>
     </div>
 </body>
 </html>

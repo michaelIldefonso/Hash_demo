@@ -23,35 +23,34 @@
         <div class="header-section">
             <h1>Sign Up</h1>
         </div>
-            <div class="form-section">
-                <form action="{{ url_for('add_user') }}" method="POST" onsubmit="return validateForm();">
-                    <label for="userName">Username:</label>
-                    <input type="text" name="userName" required><br>
+        <div class="form-section">
+            <form action="{{ url_for('add_user') }}" method="POST" onsubmit="return validateForm();">
+                <label for="userName">Username:</label>
+                <input type="text" name="userName" required><br>
 
-                    <label for="fullName">Full Name:</label>
-                    <input type="text" name="fullName" required><br>
+                <label for="fullName">Full Name:</label>
+                <input type="text" name="fullName" required><br>
 
-                    <label for="email">Email:</label>
-                    <input type="email" name="email" required><br>
+                <label for="email">Email:</label>
+                <input type="email" name="email" required><br>
 
-                    <label for="contact">Contact:</label>
-                    <input type="text" name="contact" required><br>
+                <label for="contact">Contact:</label>
+                <input type="text" name="contact" required><br>
 
-                    <label for="password">Password:</label>
-                    <input type="password" name="password" required><br>
+                <label for="password">Password:</label>
+                <input type="password" name="password" required><br>
 
-                    <label for="confirmPassword">Confirm Password:</label>
-                    <input type="password" name="confirmPassword" required><br>
+                <label for="confirmPassword">Confirm Password:</label>
+                <input type="password" name="confirmPassword" required><br>
 
-                    
-                </form>
-            </div>
-            <div class="button-container">
-                <button type="submit" class="button">Sign Up</button>
-            </div>
+                <div class="button-container">
+                    <button type="submit" class="button">Sign Up</button>
+                </div>
+            </form>
+        </div>
 
-                <!-- Link to Login Page -->
-                <p class="loginp">Already have an account? <a class="login" href="{{ url_for('login') }}">Log In</a></p>
+        <!-- Link to Login Page -->
+        <p class="loginp">Already have an account? <a class="login" href="{{ url_for('login') }}">Log In</a></p>
     </div>
 </body>
 </html>
