@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
+from bisHash import bis_hash, verify_password, is_strong_password
+
 from app.models import db, User  # Adjust based on your project structure
 import os
 
