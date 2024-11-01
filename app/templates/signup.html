@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
+    <link rel="stylesheet" href="..//static/css/styles.css">
     <script>
         function validateForm() {
             const password = document.querySelector('input[name="password"]').value;
@@ -18,30 +19,39 @@
     </script>
 </head>
 <body>
-    <h1>Sign Up</h1>
-    <form action="{{ url_for('add_user') }}" method="POST" onsubmit="return validateForm();">
-        <label for="userName">Username:</label>
-        <input type="text" name="userName" required><br>
+    <div class="container">
+        <div class="header-section">
+            <h1>Sign Up</h1>
+        </div>
+            <div class="form-section">
+                <form action="{{ url_for('add_user') }}" method="POST" onsubmit="return validateForm();">
+                    <label for="userName">Username:</label>
+                    <input type="text" name="userName" required><br>
 
-        <label for="fullName">Full Name:</label>
-        <input type="text" name="fullName" required><br>
+                    <label for="fullName">Full Name:</label>
+                    <input type="text" name="fullName" required><br>
 
-        <label for="email">Email:</label>
-        <input type="email" name="email" required><br>
+                    <label for="email">Email:</label>
+                    <input type="email" name="email" required><br>
 
-        <label for="contact">Contact:</label>
-        <input type="text" name="contact" required><br>
+                    <label for="contact">Contact:</label>
+                    <input type="text" name="contact" required><br>
 
-        <label for="password">Password:</label>
-        <input type="password" name="password" required><br>
+                    <label for="password">Password:</label>
+                    <input type="password" name="password" required><br>
 
-        <label for="confirmPassword">Confirm Password:</label>
-        <input type="password" name="confirmPassword" required><br>
+                    <label for="confirmPassword">Confirm Password:</label>
+                    <input type="password" name="confirmPassword" required><br>
 
-        <button type="submit">Sign Up</button>
-    </form>
+                    
+                </form>
+            </div>
+            <div class="button-container">
+                <button type="submit" class="button">Sign Up</button>
+            </div>
 
-    <!-- Link to Login Page -->
-    <p>Already have an account? <a href="{{ url_for('login') }}">Log In</a></p>
+                <!-- Link to Login Page -->
+                <p class="loginp">Already have an account? <a class="login" href="{{ url_for('login') }}">Log In</a></p>
+    </div>
 </body>
 </html>

@@ -1,1 +1,120 @@
-/* pwesto ni delds */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #979797;
+}
+.container {
+    max-width: 600px;
+    margin: 70px auto;
+    padding: 20px;
+    background-color: #E7E7E7;
+    border-radius: 40px;
+    box-shadow: 0 0 10px black;
+}
+h1 {
+    text-align: center;
+    color: white;
+}
+.container input[type="text"],
+.container input[type="email"],
+.container input[type="password"] {
+    width: 100%;
+    padding: 10px 0;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+.button {
+    background-color: #8B8B8B;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    width: 150px;
+    padding: 10px 2px;
+    border: 1px solid black;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 10px 5px;
+    transition: background-color 0.3s, color 0.3s, transform 0.2s; 
+}
+.button:hover,
+.button:focus {
+    background-color: #FF9100; 
+    color: black;
+    outline: 2px solid #FF9100; 
+    transform: scale(1.05); 
+}
+
+.button-container {
+    text-align: center;
+}
+
+label {
+    display: block;
+    font-size: 14px;
+    color: black;
+    margin-bottom: 5px;
+}
+.header-section {
+    background: linear-gradient(135deg, #1c1e22, #FF9100); 
+    padding: 20px;
+    margin-bottom: 20px;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    text-align: center;
+    color: white;
+    cursor: default;
+}
+
+.form-section {
+    margin: auto;
+
+}
+
+
+.loginp {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.login {
+    background-color: #8B8B8B;
+    color: white;
+    text-align: center;
+    width: 150px;
+    padding: 5px 5px;
+    border: 1px solid black;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.login:hover,
+.login:focus {
+    background-color: #FF9100; 
+    color: black;
+    outline: 2px solid #FF9100; 
+    transform: scale(1.05); 
+}
+
+.btn {
+    background-color: #8B8B8B;
+    color: white;
+    text-align: center;
+    width: 60px;
+    padding: 5px 5px;
+    border: 1px solid black;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.btn:hover,
+.btn:focus {
+    background-color: #FF9100; 
+    color: black;
+    outline: 2px solid #FF9100; 
+    transform: scale(1.05); 
+}
