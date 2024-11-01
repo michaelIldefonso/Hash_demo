@@ -1,5 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
-from bisHash import bis_hash, verify_password, is_strong_password
+from flask import Flask, render_template, request, redirect, url_for, session
 
 from app.models import db, User  # Adjust based on your project structure
 import os
@@ -7,11 +6,15 @@ import os
 app = Flask(__name__, template_folder=os.path.join('app', 'templates'))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///example.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = 'your_secret_key'  # Needed for session management
 db.init_app(app)
 
 @app.route('/')
 def index():
-    return redirect(url_for('login'))  # Redirect to the login page
+    # Check if user is logged in
+    if 'user_id' in session:
+        return render_template('index.html')  # Render the index.html template
+    return redirect(url_for('login'))  # Redirect to the login page if not logged in
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -19,9 +22,15 @@ def login():
         username = request.form.get('userName')
         password = request.form.get('password')
         
-        # Add your authentication logic here
+        # Fetch user from the database
+        user = User.query.filter_by(userName=username).first()
         
-        return redirect(url_for('index'))  # Redirect to the index page after successful login
+        # Authenticate user
+        if user and user.password == password:  # Direct comparison for plain text
+            # session['user_id'] = user.id  # Store user ID in session to mark them as logged in
+            return redirect(url_for('index'))
+        else:
+            return "Invalid username or password!", 401
     
     return render_template('login.html')
 
@@ -38,11 +47,11 @@ def signup():
             return "UserName and FullName cannot be empty!", 400
 
         new_user = User(userName=userName, fullName=fullName, email=email,
-                        contact=contact, password=password)
+                        contact=contact, password=password)  # Store plain text password
 
         db.session.add(new_user)
         db.session.commit()
-        return redirect(url_for('index'))
+        return redirect(url_for('login'))
 
     return render_template('signup.html')
 
@@ -58,13 +67,12 @@ def add_user():
         return "UserName and FullName cannot be empty!", 400
 
     new_user = User(userName=userName, fullName=fullName, email=email,
-                    contact=contact, password=password)
+                    contact=contact, password=password)  # Store plain text password
 
     db.session.add(new_user)
     db.session.commit()
     return redirect(url_for('index'))
 
-# Delete if not needed
 @app.route('/delete/<int:user_id>', methods=['POST'])
 def delete_user(user_id):
     try:
