@@ -3,7 +3,8 @@ from flask import Flask, render_template, request, redirect, url_for
 from app.models import db, User  # Adjust based on your project structure
 import os
 
-app = Flask(__name__, template_folder=os.path.join('app', 'templates'))
+
+app = Flask(__name__, static_folder=os.path.join('app', 'static'), template_folder=os.path.join('app', 'templates'))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///example.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)

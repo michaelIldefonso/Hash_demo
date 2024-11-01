@@ -2,7 +2,8 @@
 from flask import Flask
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='static')  # Set static_folder here
+    print("Static folder path:", app.static_folder)
     
     # Load configurations
     app.config.from_object('config.Config')
