@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from bisHash.hashing import bis_hash, verify_password, is_strong_password
+
 from app.models import db, User  # Adjust based on your project structure
 import os
 
@@ -17,12 +18,12 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])  # Allow both GET and POST
 def login():
     if request.method == 'POST':
-        username_or_email = request.form.get('username_or_email')
+        email = request.form.get('email')
         password = request.form.get('password')
 
         # Fetch user based on username or email
         user = User.query.filter(
-            (User.userName == username_or_email) | (User.email == username_or_email)
+             (User.email == email)
         ).first()
 
         if user and verify_password(user.password, user.email, password):  # Verify hashed password
