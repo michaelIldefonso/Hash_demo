@@ -1,17 +1,54 @@
 import jwt
 import datetime
+import binascii
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from bisHash.hashing import bis_hash, verify_password, is_strong_password
 from app.models import db, User  # Adjust based on your project structure
+from Crypto.Cipher import AES
+from Crypto.Protocol.KDF import PBKDF2
+from base64 import b64encode, b64decode
 import os
 
-
+SECRET_KEY = 'bisnarHashing'
 app = Flask(__name__, static_folder=os.path.join('app', 'static'), template_folder=os.path.join('app', 'templates'))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///example.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'your_secret_key_here'  # Change to a secure key
 app.config['SESSION_COOKIE_NAME'] = 'Token'  # Make sure the session is properly configured
 db.init_app(app)
+
+def encrypt_email(email: str) -> str:
+    # Generate a random salt
+    salt = os.urandom(16)
+    key = PBKDF2(SECRET_KEY, salt, dkLen=32)  # Derive the AES key using PBKDF2
+    cipher = AES.new(key, AES.MODE_GCM)  # Use GCM mode for authenticated encryption
+    ciphertext, tag = cipher.encrypt_and_digest(email.encode('utf-8'))
+    
+    # Concatenate salt, nonce, tag, and ciphertext, then base64 encode
+    encrypted_email = b64encode(salt + cipher.nonce + tag + ciphertext).decode('utf-8')
+    return encrypted_email
+
+def decrypt_email(encrypted_email: str) -> str:
+    try:
+        # Ensure the encrypted email is properly padded
+        missing_padding = len(encrypted_email) % 4
+        if missing_padding:
+            encrypted_email += '=' * (4 - missing_padding)
+
+        encrypted_data = b64decode(encrypted_email)  # Decode the base64 string
+        salt = encrypted_data[:16]
+        nonce = encrypted_data[16:32]
+        tag = encrypted_data[32:48]
+        ciphertext = encrypted_data[48:]
+
+        key = PBKDF2(SECRET_KEY, salt, dkLen=32)
+        cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+        decrypted_email = cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8').strip
+
+        return decrypted_email
+    except (binascii.Error, ValueError, KeyError) as e:
+        print(f"Error during decryption: {e}")
+        return None  # Or handle this more gracefully depending on your app
 
 @app.route('/')
 def home():
@@ -22,36 +59,45 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])  # Allow both GET and POST
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = request.form.get('email').strip
         password = request.form.get('password')
-
+        userName = "walana"
+        
         # Fetch user based on username or email
         user = User.query.filter(
-             (User.email == email)
+             (User.userName == userName)
         ).first()
 
-        if user and verify_password(user.password, user.email, password):  # Verify hashed password
-            session['user_id'] = user.id  # Log the user in by storing their ID in session
-            # Generate JWT token
-            token = jwt.encode(
-                {
-                    "user_id": user.id,
-                    "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token expiry time (1 hour)
-                },
-                app.secret_key,  # Use your Flask app's secret key for signing the token
-                algorithm="HS256"  # You can use HS256 or any other algorithm you prefer
-            )
+        if user:
+            print(f"Encrypted email before padding: {user.email}")
+            decrypted_email = decrypt_email(user.email)  # Decrypt the email
+            print(f"Decrypted Email: {decrypted_email}")  # Debugging line
+            print(f"Input Email: {email}")  # Debugging line
 
-            # Store the token in session (optional for backend usage)
-            session['auth_token'] = token
-            print(f"JWT Token: {token}")
-            
-            decoded_token = jwt.decode(token, app.secret_key, algorithms=["HS256"])
-            print(decoded_token)  # Check the decoded token
+            if email == decrypted_email and verify_password(user.password, user.email, password):  # Verify hashed password
+                session['user_id'] = user.id  # Log the user in by storing their ID in session
+                # Generate JWT token
+                token = jwt.encode(
+                    {
+                        "user_id": user.id,
+                        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token expiry time (1 hour)
+                    },
+                    app.secret_key,  # Use your Flask app's secret key for signing the token
+                    algorithm="HS256"  # You can use HS256 or any other algorithm you prefer
+                )
 
-            return redirect(url_for('index'))  # Redirect to the index page after login
+                # Store the token in session (optional for backend usage)
+                session['auth_token'] = token
+                print(f"JWT Token: {token}")
+                
+                decoded_token = jwt.decode(token, app.secret_key, algorithms=["HS256"])
+                print(decoded_token)  # Check the decoded token
+
+                return redirect(url_for('index'))  # Redirect to the index page after login
+            else:
+                return "Invalid credentials", 401  # Unauthorized
         else:
-            return "Invalid credentials", 401  # Unauthorized
+            return "User not found!", 404
 
     return render_template('login.html')  # Render the login page for GET requests
 
@@ -67,7 +113,7 @@ def protected():
         user_id = decoded["user_id"]
         return f"Protected Content: Welcome user {user_id}"
         # Optional: Fetch user info if needed
-        return jsonify({"message": "Access granted", "user_id": user_id})
+        # return jsonify({"message": "Access granted", "user_id": user_id})
     except jwt.ExpiredSignatureError:
         return jsonify({"message": "Token expired"}), 403
     except jwt.InvalidTokenError:
@@ -86,13 +132,17 @@ def signup():
         if not is_strong_password(password):
             return "Password does not meet strength requirements.", 400
         
+        # Encrypt the email before saving to the database
+        encrypted_email = encrypt_email(email)
+        print(f"Encrypted Email: {encrypted_email}")  # Debugging line
+
         hashed_password = bis_hash(email, password)  # Hash the password
 
         if not userName or not fullName:
             return "UserName and FullName cannot be empty!", 400
 
         # Create new user instance
-        new_user = User(userName=userName, fullName=fullName, email=email,
+        new_user = User(userName=userName, fullName=fullName, email=encrypted_email,
                         contact=contact, password=hashed_password)
 
         db.session.add(new_user)
@@ -108,26 +158,6 @@ def index():
     users = User.query.all()  # Fetch users from the database
     return render_template('index.html', users=users)  # Render index.html with user data
 
-@app.route('/add', methods=['POST'])
-def add_user():
-    userName = request.form.get('userName')
-    fullName = request.form.get('fullName')
-    email = request.form.get('email')
-    contact = request.form.get('contact')
-    password = request.form.get('password')
-    hashed_password = bis_hash(email, password)
-
-    if not userName or not fullName:
-        return "UserName and FullName cannot be empty!", 400
-    
-   
-
-    new_user = User(userName=userName, fullName=fullName, email=email,
-                    contact=contact, password=hashed_password)
-
-    db.session.add(new_user)
-    db.session.commit()
-    return redirect(url_for('login'))  # Redirect to login after adding user
 
 @app.route('/delete/<int:user_id>', methods=['POST'])
 def delete_user(user_id):
