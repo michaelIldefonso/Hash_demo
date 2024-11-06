@@ -62,5 +62,21 @@
         <p class="loginp">Don't have an account? <a class="login" href="{{ url_for('signup') }}">Sign Up</a></p>
         <p class="loginp">Already have an account? <a class="login" href="{{ url_for('login') }}">Log In</a></p>
     </div>
+
+    <!-- User Cards Section -->
+<div class="user-cards-container">
+    {% for user in users %}
+    <div class="user-card">
+        <h3>{{ user.userName }}</h3>
+        <p><strong>Full Name:</strong> {{ user.fullName }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Contact:</strong> {{ user.contact }}</p>
+        <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+            <button type="button" class="btn" onclick="confirmDelete('{{ user.userName }}', this.form)">Delete</button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+
 </body>
 </html>
