@@ -1,19 +1,23 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+import jwt
+import datetime
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from bisHash.hashing import bis_hash, verify_password, is_strong_password
-
 from app.models import db, User  # Adjust based on your project structure
 import os
+
 
 app = Flask(__name__, static_folder=os.path.join('app', 'static'), template_folder=os.path.join('app', 'templates'))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///example.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'your_secret_key_here'  # Change to a secure key
-
+app.config['SESSION_COOKIE_NAME'] = 'Token'  # Make sure the session is properly configured
 db.init_app(app)
 
 @app.route('/')
 def home():
     return redirect(url_for('login'))  # Redirect to the login page
+
+
 
 @app.route('/login', methods=['GET', 'POST'])  # Allow both GET and POST
 def login():
@@ -28,12 +32,47 @@ def login():
 
         if user and verify_password(user.password, user.email, password):  # Verify hashed password
             session['user_id'] = user.id  # Log the user in by storing their ID in session
+            # Generate JWT token
+            token = jwt.encode(
+                {
+                    "user_id": user.id,
+                    "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token expiry time (1 hour)
+                },
+                app.secret_key,  # Use your Flask app's secret key for signing the token
+                algorithm="HS256"  # You can use HS256 or any other algorithm you prefer
+            )
+
+            # Store the token in session (optional for backend usage)
+            session['auth_token'] = token
+            print(f"JWT Token: {token}")
+            
+            decoded_token = jwt.decode(token, app.secret_key, algorithms=["HS256"])
+            print(decoded_token)  # Check the decoded token
+
             return redirect(url_for('index'))  # Redirect to the index page after login
         else:
             return "Invalid credentials", 401  # Unauthorized
 
     return render_template('login.html')  # Render the login page for GET requests
 
+@app.route('/protected', methods=['GET'])
+def protected():
+    token = request.headers.get("Authorization")
+    if not token:
+        return jsonify({"message": "Token missing"}), 403
+
+    try:
+        decoded = jwt.decode(token, app.secret_key, algorithms=["HS256"])
+        print(f"Decoded Token: {decoded}")
+        user_id = decoded["user_id"]
+        return f"Protected Content: Welcome user {user_id}"
+        # Optional: Fetch user info if needed
+        return jsonify({"message": "Access granted", "user_id": user_id})
+    except jwt.ExpiredSignatureError:
+        return jsonify({"message": "Token expired"}), 403
+    except jwt.InvalidTokenError:
+        return jsonify({"message": "Invalid token"}), 403
+    
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -103,6 +142,26 @@ def delete_user(user_id):
     except Exception as e:
         print(f"Error deleting user: {e}")
         return "An error occurred while trying to delete the user.", 500
+
+@app.route('/check_session')
+def check_session():
+    token = request.headers.get('Authorization')  # Get the token from the Authorization header
+    
+    if not token:
+        return 'Unauthorized', 401  # Token is missing
+    
+    try:
+        # Remove 'Bearer ' prefix if it exists
+        token = token.split(' ')[1]
+        
+        # Decode and validate the token
+        decoded_token = jwt.decode(token, app.secret_key, algorithms=["HS256"])
+        return 'Authenticated', 200  # Token is valid
+
+    except jwt.ExpiredSignatureError:
+        return 'Token expired', 401  # Token expired
+    except jwt.InvalidTokenError:
+        return 'Invalid token', 401  # Invalid token
 
 @app.route('/logout', methods=['POST'])  # Make sure to include methods=['POST']
 def logout():
