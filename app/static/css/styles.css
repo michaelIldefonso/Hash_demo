@@ -25,6 +25,7 @@ h1 {
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 16px;
+    text-align: center;
 }
 .button {
     background-color: #8B8B8B;
@@ -37,7 +38,8 @@ h1 {
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
-    margin: 10px 5px;
+    margin: 10px auto;
+    display: block;
     transition: background-color 0.3s, color 0.3s, transform 0.2s; 
 }
 .button:hover,
