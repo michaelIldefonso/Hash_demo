@@ -1,1 +1,17 @@
+# Virtual environment
 venv/
+env/
+
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE settings
+.idea/
+.vscode/
+
+# OS files
+.DS_Store  # macOS
+Thumbs.db  # Windows
