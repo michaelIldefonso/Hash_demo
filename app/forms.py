@@ -15,3 +15,4 @@ class SignupForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(min=12)])
     pass2 = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     confirmBtn = SubmitField('Sign Up')
+    
