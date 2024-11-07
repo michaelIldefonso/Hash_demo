@@ -1,6 +1,7 @@
 # Virtual environment
 venv/
 env/
+myenv/
 
 
 # Python bytecode
@@ -15,3 +16,4 @@ __pycache__/
 # OS files
 .DS_Store  # macOS
 Thumbs.db  # Windows
+dea
