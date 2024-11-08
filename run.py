@@ -18,10 +18,16 @@ app.config['SESSION_COOKIE_NAME'] = 'Token'  # Make sure the session is properly
 db.init_app(app)
 
 def encrypt_email(email: str) -> str:
+    """
+    Encrypts an email using AES encryption with GCM mode.
+    Returns a base64-encoded string containing salt, nonce, tag, and ciphertext.
+    """
     # Generate a random salt
     salt = os.urandom(16)
     key = PBKDF2(SECRET_KEY, salt, dkLen=32)  # Derive the AES key using PBKDF2
-    cipher = AES.new(key, AES.MODE_GCM)  # Use GCM mode for authenticated encryption
+    
+    # Encrypt email
+    cipher = AES.new(key, AES.MODE_GCM)
     ciphertext, tag = cipher.encrypt_and_digest(email.encode('utf-8'))
     
     # Concatenate salt, nonce, tag, and ciphertext, then base64 encode
@@ -29,26 +35,34 @@ def encrypt_email(email: str) -> str:
     return encrypted_email
 
 def decrypt_email(encrypted_email: str) -> str:
+    """
+    Decrypts an encrypted email string.
+    The encrypted email string must be base64-encoded and contain salt, nonce, tag, and ciphertext.
+    """
     try:
         # Ensure the encrypted email is properly padded
         missing_padding = len(encrypted_email) % 4
         if missing_padding:
             encrypted_email += '=' * (4 - missing_padding)
 
-        encrypted_data = b64decode(encrypted_email)  # Decode the base64 string
+        # Decode the base64 string and separate salt, nonce, tag, and ciphertext
+        encrypted_data = b64decode(encrypted_email)
         salt = encrypted_data[:16]
         nonce = encrypted_data[16:32]
         tag = encrypted_data[32:48]
         ciphertext = encrypted_data[48:]
 
+        # Derive the key again using the same salt
         key = PBKDF2(SECRET_KEY, salt, dkLen=32)
+        
+        # Decrypt email
         cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
-        decrypted_email = cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8').strip
-
-        return decrypted_email
+        decrypted_email = cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8')
+        
+        return decrypted_email  # Return decrypted email
     except (binascii.Error, ValueError, KeyError) as e:
         print(f"Error during decryption: {e}")
-        return None  # Or handle this more gracefully depending on your app
+        return None  # Handle decryption errors gracefully
 
 @app.route('/')
 def home():
@@ -201,4 +215,4 @@ def logout():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # Ensure tables are created
-        app.run(port=80)
+        app.run(host="0.0.0.0", debug=True, port=5000)
