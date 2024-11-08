@@ -11,11 +11,16 @@
     <div class="container">
         <div class="header-section">
             <h1>Log In</h1>
+            {% if error %}
+        <div style="color: red;">
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
         </div>
         <div class="form-section">
             <form action="{{ url_for('login') }}" method="POST">
-                <label for="email">Email:</label>
-                <input type="email" name="email" required><br>
+                <label for="username">Email:</label>
+                <input type="text" name="username" required><br>
 
                 <label for="password">Password:</label>
                 <input type="password" name="password" required><br>

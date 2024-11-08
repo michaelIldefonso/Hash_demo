@@ -1,119 +1,80 @@
 import jwt
 import datetime
-import binascii
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from bisHash.hashing import bis_hash, verify_password, is_strong_password
 from app.models import db, User  # Adjust based on your project structure
-from Crypto.Cipher import AES
-from Crypto.Protocol.KDF import PBKDF2
-from base64 import b64encode, b64decode
+from cryptography.fernet import Fernet  # Import Fernet encryption
 import os
 
-SECRET_KEY = 'bisnarHashing'
+# Generate a secret key for Fernet (only do this once)
+# fernet_key = Fernet.generate_key()
+# Save this key securely in a real-world app (such as in environment variables)
+fernet_key = b'Zq1xA3L4Eb5ODRjLaH8LU9aDPgclGCU94ZjtCt68a2c='  # Replace with your actual secret key for Fernet
+cipher = Fernet(fernet_key)
+
 app = Flask(__name__, static_folder=os.path.join('app', 'static'), template_folder=os.path.join('app', 'templates'))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///example.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'your_secret_key_here'  # Change to a secure key
+app.secret_key = 'MGABOBO'  # Change to a secure key
 app.config['SESSION_COOKIE_NAME'] = 'Token'  # Make sure the session is properly configured
 db.init_app(app)
 
+# Encrypt the email using Fernet
 def encrypt_email(email: str) -> str:
-    """
-    Encrypts an email using AES encryption with GCM mode.
-    Returns a base64-encoded string containing salt, nonce, tag, and ciphertext.
-    """
-    # Generate a random salt
-    salt = os.urandom(16)
-    key = PBKDF2(SECRET_KEY, salt, dkLen=32)  # Derive the AES key using PBKDF2
-    
-    # Encrypt email
-    cipher = AES.new(key, AES.MODE_GCM)
-    ciphertext, tag = cipher.encrypt_and_digest(email.encode('utf-8'))
-    
-    # Concatenate salt, nonce, tag, and ciphertext, then base64 encode
-    encrypted_email = b64encode(salt + cipher.nonce + tag + ciphertext).decode('utf-8')
-    return encrypted_email
+    encrypted_email = cipher.encrypt(email.encode())  # Encrypt the email
+    return encrypted_email.decode()  # Return the encrypted email as a string
 
+# Decrypt the email using Fernet
 def decrypt_email(encrypted_email: str) -> str:
-    """
-    Decrypts an encrypted email string.
-    The encrypted email string must be base64-encoded and contain salt, nonce, tag, and ciphertext.
-    """
-    try:
-        # Ensure the encrypted email is properly padded
-        missing_padding = len(encrypted_email) % 4
-        if missing_padding:
-            encrypted_email += '=' * (4 - missing_padding)
-
-        # Decode the base64 string and separate salt, nonce, tag, and ciphertext
-        encrypted_data = b64decode(encrypted_email)
-        salt = encrypted_data[:16]
-        nonce = encrypted_data[16:32]
-        tag = encrypted_data[32:48]
-        ciphertext = encrypted_data[48:]
-
-        # Derive the key again using the same salt
-        key = PBKDF2(SECRET_KEY, salt, dkLen=32)
-        
-        # Decrypt email
-        cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
-        decrypted_email = cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8')
-        
-        return decrypted_email  # Return decrypted email
-    except (binascii.Error, ValueError, KeyError) as e:
-        print(f"Error during decryption: {e}")
-        return None  # Handle decryption errors gracefully
+    decrypted_email = cipher.decrypt(encrypted_email.encode())  # Decrypt the email
+    return decrypted_email.decode()  # Return the decrypted email as a string
 
 @app.route('/')
 def home():
     return redirect(url_for('login'))  # Redirect to the login page
 
-
-
 @app.route('/login', methods=['GET', 'POST'])  # Allow both GET and POST
 def login():
     if request.method == 'POST':
-        email = request.form.get('email').strip
+        username = request.form.get('username')  # Changed from 'email' to 'username'
         password = request.form.get('password')
-        userName = "walana"
-        
-        # Fetch user based on username or email
+
+        # Handle missing username or password
+        if not username or not password:
+            return render_template('login.html', error="Username and password are required")
+
+        username = username.strip()  # Strip any leading/trailing spaces
+
+        # Fetch user based on username
         user = User.query.filter(
-             (User.userName == userName)
+            (User.userName == username)  # Query by username
         ).first()
 
         if user:
-            print(f"Encrypted email before padding: {user.email}")
+            # Verify if the username is correct and if the password is correct
             decrypted_email = decrypt_email(user.email)  # Decrypt the email
-            print(f"Decrypted Email: {decrypted_email}")  # Debugging line
-            print(f"Input Email: {email}")  # Debugging line
-
-            if email == decrypted_email and verify_password(user.password, user.email, password):  # Verify hashed password
+            if username == user.userName and verify_password(user.password, decrypted_email, password):  # Verify hashed password
                 session['user_id'] = user.id  # Log the user in by storing their ID in session
                 # Generate JWT token
                 token = jwt.encode(
-                    {
-                        "user_id": user.id,
-                        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token expiry time (1 hour)
-                    },
+                    {"user_id": user.id, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
                     app.secret_key,  # Use your Flask app's secret key for signing the token
                     algorithm="HS256"  # You can use HS256 or any other algorithm you prefer
                 )
 
                 # Store the token in session (optional for backend usage)
                 session['auth_token'] = token
-                print(f"JWT Token: {token}")
-                
+
                 decoded_token = jwt.decode(token, app.secret_key, algorithms=["HS256"])
-                print(decoded_token)  # Check the decoded token
 
                 return redirect(url_for('index'))  # Redirect to the index page after login
             else:
-                return "Invalid credentials", 401  # Unauthorized
+                return render_template('login.html', error="Invalid credentials")  # Show error in login page
         else:
-            return "User not found!", 404
+            return render_template('login.html', error="User not found!")  # Show error in login page
 
     return render_template('login.html')  # Render the login page for GET requests
+
 
 @app.route('/protected', methods=['GET'])
 def protected():
@@ -123,11 +84,8 @@ def protected():
 
     try:
         decoded = jwt.decode(token, app.secret_key, algorithms=["HS256"])
-        print(f"Decoded Token: {decoded}")
         user_id = decoded["user_id"]
         return f"Protected Content: Welcome user {user_id}"
-        # Optional: Fetch user info if needed
-        # return jsonify({"message": "Access granted", "user_id": user_id})
     except jwt.ExpiredSignatureError:
         return jsonify({"message": "Token expired"}), 403
     except jwt.InvalidTokenError:
@@ -148,7 +106,6 @@ def signup():
         
         # Encrypt the email before saving to the database
         encrypted_email = encrypt_email(email)
-        print(f"Encrypted Email: {encrypted_email}")  # Debugging line
 
         hashed_password = bis_hash(email, password)  # Hash the password
 
@@ -172,7 +129,6 @@ def index():
     users = User.query.all()  # Fetch users from the database
     return render_template('index.html', users=users)  # Render index.html with user data
 
-
 @app.route('/delete/<int:user_id>', methods=['POST'])
 def delete_user(user_id):
     try:
@@ -184,7 +140,6 @@ def delete_user(user_id):
         else:
             return "User not found!", 404  # Handle the case where the user doesn't exist
     except Exception as e:
-        print(f"Error deleting user: {e}")
         return "An error occurred while trying to delete the user.", 500
 
 @app.route('/check_session')
