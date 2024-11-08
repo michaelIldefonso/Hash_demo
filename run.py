@@ -1,10 +1,13 @@
 import jwt
 import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
-from bisHash.hashing import bis_hash, verify_password, is_strong_password
+from bisHash.hashing import bis_hash, verify_password, is_strong_password, track_failed_attempt, check_account_lock
 from app.models import db, User  # Adjust based on your project structure
 from cryptography.fernet import Fernet  # Import Fernet encryption
 import os
+from collections import defaultdict
+import time
+
 
 # Generate a secret key for Fernet (only do this once)
 # fernet_key = Fernet.generate_key()
@@ -45,6 +48,9 @@ def login():
 
         username = username.strip()  # Strip any leading/trailing spaces
 
+        if check_account_lock(username):
+            return render_template('login.html', error="Too many failed login attempts. Please try again later.")
+
         # Fetch user based on username
         user = User.query.filter(
             (User.userName == username)  # Query by username
@@ -69,8 +75,10 @@ def login():
 
                 return redirect(url_for('index'))  # Redirect to the index page after login
             else:
+                track_failed_attempt(username)  # Track failed login attempt
                 return render_template('login.html', error="Invalid credentials")  # Show error in login page
         else:
+            track_failed_attempt(username)  # Track failed login attempt
             return render_template('login.html', error="User not found!")  # Show error in login page
 
     return render_template('login.html')  # Render the login page for GET requests
