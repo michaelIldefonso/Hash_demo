@@ -1,7 +1,7 @@
 import jwt
 import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
-from bisHash.hashing import bis_hash, verify_password, is_strong_password, track_failed_attempt, check_account_lock
+from bisHash.hashing import bis_hash, verify_password, is_strong_password, track_failed_attempt, check_account_lock, rate_limited_bis_hash
 from app.models import db, User  # Adjust based on your project structure
 from cryptography.fernet import Fernet  # Import Fernet encryption
 import os
