@@ -9,9 +9,9 @@
     <!--Delete if not needed-->
     <script>
         function confirmDelete(username, form) {
-            if (confirm(`Are you sure you want to delete the user "${username}"?`)) {
+            
                 form.submit();
-            }
+            
         }
     </script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
