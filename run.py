@@ -1,7 +1,7 @@
 import jwt
 import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
-from bisHash.hashing import bis_hash, verify_password, is_strong_password, track_failed_attempt, check_account_lock, rate_limited_bis_hash
+from bisHash.hashing import bis_hash, verify_password, is_strong_password, track_failed_attempt, check_account_lock
 from app.models import db, User  # Adjust based on your project structure
 from cryptography.fernet import Fernet  # Import Fernet encryption
 import os
@@ -21,6 +21,15 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'MGABOBO'  # Change to a secure key
 app.config['SESSION_COOKIE_NAME'] = 'Token'  # Make sure the session is properly configured
 db.init_app(app)
+
+
+def get_user_ip():
+    if request.headers.get('X-Forwarded-For'):
+
+        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    else:
+        return request.remote_addr
+    
 
 # Encrypt the email using Fernet
 def encrypt_email(email: str) -> str:
@@ -108,14 +117,16 @@ def signup():
         contact = request.form.get('contact')
         password = request.form.get('password')
 
+        ip = get_user_ip()
+
         # Ensure password is strong before proceeding
-        if not is_strong_password(password):
-            return "Password does not meet strength requirements.", 400
+        # if not is_strong_password(password):
+        #     return "Password does not meet strength requirements.", 400
         
         # Encrypt the email before saving to the database
         encrypted_email = encrypt_email(email)
 
-        hashed_password = bis_hash(email, password)  # Hash the password
+        hashed_password = bis_hash(ip, email, password)  # Hash the password
 
         if not userName or not fullName:
             return "UserName and FullName cannot be empty!", 400
