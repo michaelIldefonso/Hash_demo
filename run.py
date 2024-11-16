@@ -1,7 +1,7 @@
 import jwt
 import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
-from bisHash.hashing import bis_hash, verify_password, is_strong_password, track_failed_attempt, check_account_lock
+from bisHash.hashing import bis_hash, verify_password, is_strong_password, track_failed_attempt, check_account_lock, TooManyAttemptsError
 from app.models import db, User  # Adjust based on your project structure
 from cryptography.fernet import Fernet  # Import Fernet encryption
 import os
@@ -125,19 +125,22 @@ def signup():
         
         # Encrypt the email before saving to the database
         encrypted_email = encrypt_email(email)
+        try:
+            hashed_password = bis_hash(ip, email, password)  # Hash the password
 
-        hashed_password = bis_hash(ip, email, password)  # Hash the password
+            if not userName or not fullName:
+                return "UserName and FullName cannot be empty!", 400
 
-        if not userName or not fullName:
-            return "UserName and FullName cannot be empty!", 400
+            # Create new user instance
+            new_user = User(userName=userName, fullName=fullName, email=encrypted_email,
+                            contact=contact, password=hashed_password)
 
-        # Create new user instance
-        new_user = User(userName=userName, fullName=fullName, email=encrypted_email,
-                        contact=contact, password=hashed_password)
+            db.session.add(new_user)
+            db.session.commit()
+            return redirect(url_for('login'))  # Redirect to login after adding user
 
-        db.session.add(new_user)
-        db.session.commit()
-        return redirect(url_for('login'))  # Redirect to login after adding user
+        except TooManyAttemptsError as e:
+            return render_template('signup.html', error=str(e))  
 
     return render_template('signup.html')  # Render the signup page for GET requests
 
