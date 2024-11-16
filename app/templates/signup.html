@@ -23,6 +23,10 @@
     <div class="container">
         <div class="header-section">
             <h1>Sign Up</h1>
+
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
         </div>
         <div class="form-section">
             <form action="{{ url_for('signup') }}" method="POST" onsubmit="return validateForm();">
@@ -54,9 +58,7 @@
         <p class="loginp">Already have an account? <a class="login" href="{{ url_for('login') }}">Log In</a></p>
 
 
-        {% if error %}
-    <p class="error">{{ error }}</p>
-        {% endif %}
+        
     </div>
 </body>
 </html>
